@@ -2,7 +2,6 @@ package com.coelho.library;
 
 import java.util.List;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -12,17 +11,15 @@ import org.springframework.stereotype.Repository;
 public class AcervoJDBCImpl implements IAcervoRepository {
     private JdbcTemplate jdbcTemplate;
 
-    @Autowired
     public AcervoJDBCImpl(JdbcTemplate jdbcTemplate) {
         this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public List<Livro> getAll() {
-        List<Livro> resp = this.jdbcTemplate.query("SELECT * from livros",
+        return this.jdbcTemplate.query("SELECT * FROM livros",
             (rs, rowNum)->
-                new Livro(rs.getLong("id"),rs.getString("titulo"),rs.getString("autor"),rs.getInt("ano"),rs.getLong("codigoUsuario")));
-        return resp;
+                new Livro(rs.getInt("id"),rs.getString("titulo"),rs.getString("autor"),rs.getInt("ano"),rs.getInt("codigoUsuario")));
     }
 
     @Override
