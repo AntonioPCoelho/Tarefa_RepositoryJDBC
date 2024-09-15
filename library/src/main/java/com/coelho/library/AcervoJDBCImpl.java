@@ -3,24 +3,27 @@ package com.coelho.library;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Primary;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public class AcervoMemoriaImpl implements IAcervoRepository {
-    private List<Livro> livros;
+@Primary
+public class AcervoJDBCImpl implements IAcervoRepository {
+    private JdbcTemplate jdbcTemplate;
 
-    public AcervoMemoriaImpl() {
-        livros = new LinkedList<>();
-
-        livros.add(new Livro(10, "Introdução ao Java", "Huguinho Pato", 2022));
-        livros.add(new Livro(20, "Introdução ao Spring-Boot", "Zezinho Pato", 2020));
-        livros.add(new Livro(15, "Principios SOLID", "Luizinho Pato", 2023));
-        livros.add(new Livro(17, "Padroes de Projeto", "Lala Pato", 2019));
+    @Autowired
+    public AcervoJDBCImpl(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     @Override
     public List<Livro> getAll() {
-        return livros;
+        List<Livro> resp = this.jdbcTemplate.query("SELECT * from livros",
+            (rs, rowNum)->
+                new Livro(rs.getInt("id"),rs.getString("titulo"),rs.getString("autor"),rs.getInt("ano")));
+        return resp;
     }
 
     @Override
@@ -58,15 +61,15 @@ public class AcervoMemoriaImpl implements IAcervoRepository {
 
     @Override
     public boolean cadastraLivroNovo(Livro livro) {
-        livros.add(livro);
+        this.jdbcTemplate.update(
+            "INSERT INTO livros(id,titulo,autor,ano) VALUES (?,?,?,?)",
+            livro.getId(),livro.getTitulo(),livro.getAutor(),livro.getAno());
         return true;
     }
 
     @Override
     public boolean removeLivro(long codigo) {
-        List<Livro> tmp = livros.stream()
-                .filter(livro -> livro.getId() == codigo)
-                .toList();
-        return tmp.removeAll(tmp);
+        this.jdbcTemplate.update("DELETE From livros WHERE id = ?", codigo);
+        return true;
     }
 }
