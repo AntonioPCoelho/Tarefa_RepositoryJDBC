@@ -2,13 +2,16 @@ package com.coelho.library;
 
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Primary;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementSetter;
 import org.springframework.stereotype.Repository;
 
 @Repository
 @Primary
 public class AcervoJDBCImpl implements IAcervoRepository {
+    @Autowired
     private JdbcTemplate jdbcTemplate;
 
     public AcervoJDBCImpl(JdbcTemplate jdbcTemplate) {
@@ -70,5 +73,28 @@ public class AcervoJDBCImpl implements IAcervoRepository {
     public boolean removeLivro(long codigo) {
         this.jdbcTemplate.update("DELETE From livros WHERE id = ?", codigo);
         return true;
+    }
+
+    public boolean retiraLivro(long codigo, long codigoUsuario) {
+        this.jdbcTemplate.update("UPDATE livros SET codigoUsuario = ? WHERE id = ?", codigoUsuario, codigo);
+        return true;
+    }
+
+    public boolean devolveLivro(long codigo) {
+        this.jdbcTemplate.update("UPDATE livros SET codigoUsuario = -1 WHERE id = ?", codigo);
+        return true;
+    }
+
+    public List<Livro> getLivrosNaoEmprestados() {
+        return this.jdbcTemplate.query(
+            "SELECT * FROM livros WHERE codigoUsuario = -1", 
+            (rs, rowNum) -> 
+                new Livro(rs.getLong("id"),rs.getString("titulo"),rs.getString("autor"),rs.getInt("ano"),rs.getLong("codigoUsuario")));
+    }
+
+    public List<Livro> getLivrosEmprestados(long codigoUsuario) {
+        String query = "SELECT * FROM livros WHERE codigoUsuario = ?";
+        return jdbcTemplate.query(query, (PreparedStatementSetter) ps -> ps.setLong(1, codigoUsuario), (rs, rowNum) -> 
+            new Livro(rs.getLong("id"), rs.getString("titulo"), rs.getString("autor"), rs.getInt("ano"), rs.getLong("codigoUsuario")));
     }
 }

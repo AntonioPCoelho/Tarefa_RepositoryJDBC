@@ -2,7 +2,6 @@ package com.coelho.library;
 
 import java.util.List;
 
-import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,7 +13,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class Controller {
     private IAcervoRepository livros;
-    private JdbcTemplate jdbcTemplate;
 
     public Controller(IAcervoRepository livros) {
         this.livros = livros; 
@@ -57,5 +55,29 @@ public class Controller {
     @CrossOrigin(origins = "*")
     public boolean cadastraLivroNovo(@RequestBody final Livro livro) {
         return livros.cadastraLivroNovo(livro);
+    }
+
+    @PostMapping("/retiralivro/{id}/usuario/{codigoUsuario}")
+    @CrossOrigin(origins = "*")
+    public boolean retiraLivro(@PathVariable(value="livroId") long id, @PathVariable(value="usuarioId") long usuarioId) {
+        return livros.retiraLivro(id, usuarioId);
+    }
+
+    @PostMapping("/devolvelivro/{id}")
+    @CrossOrigin(origins = "*")
+    public boolean devolveLivro(@PathVariable(value="id") long id) {
+        return livros.devolveLivro(id);
+    }
+
+    @GetMapping("/naoemprestados")
+    @CrossOrigin(origins = "*")
+    public List<Livro> getLivrosNaoEmprestados() {
+        return livros.getLivrosNaoEmprestados();
+    }
+    
+    @GetMapping("/emprestados/usuario/{codigoUsuario}")
+    @CrossOrigin(origins = "*")
+    public List<Livro> getLivrosEmprestados(@PathVariable(value="codigoUsuario") long codigoUsuario) {
+        return livros.getLivrosEmprestados(codigoUsuario);
     }
 }
