@@ -1,6 +1,5 @@
 package com.coelho.library;
 
-import java.util.LinkedList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,48 +21,51 @@ public class AcervoJDBCImpl implements IAcervoRepository {
     public List<Livro> getAll() {
         List<Livro> resp = this.jdbcTemplate.query("SELECT * from livros",
             (rs, rowNum)->
-                new Livro(rs.getInt("id"),rs.getString("titulo"),rs.getString("autor"),rs.getInt("ano")));
+                new Livro(rs.getLong("id"),rs.getString("titulo"),rs.getString("autor"),rs.getInt("ano"),rs.getLong("codigoUsuario")));
         return resp;
     }
 
     @Override
     public List<String> getTitulos() {
-        return getAll()
-                .stream()
-                .map(livro -> livro.getTitulo())
-                .toList();
-    }
+        return this.jdbcTemplate.query(
+            "SELECT titulo FROM livros", 
+                (rs, rowNum) -> rs.getString("titulo"));
+}
 
     @Override
     public List<String> getAutores() {
-        return getAll()
-                .stream()
-                .map(livro -> livro.getAutor())
-                .toList();
-    }
+        return this.jdbcTemplate.query(
+            "SELECT autor FROM livros", 
+                (rs, rowNum) -> rs.getString("autor"));
+}
 
     @Override
     public List<Livro> getLivrosDoAutor(String autor) {
-        return getAll()
-                .stream()
-                .filter(livro -> livro.getAutor().equals(autor))
-                .toList();
-    }
+        return this.jdbcTemplate.query(
+            "SELECT * FROM livros WHERE autor = ?", 
+            ps -> ps.setString(1, autor),
+            (rs, rowNum) -> 
+                new Livro(rs.getLong("id"),rs.getString("titulo"),rs.getString("autor"),rs.getInt("ano"), rs.getLong("codigoUsuario")));
+}
+
 
     @Override
     public Livro getLivroTitulo(String titulo) {
-        return getAll()
-                .stream()
-                .filter(livro -> livro.getTitulo().equals(titulo))
-                .findFirst()
-                .orElse(null);
-    }
+        List<Livro> livros = this.jdbcTemplate.query(
+            "SELECT * FROM livros WHERE titulo = ?", 
+            ps -> ps.setString(1, titulo),
+            (rs, rowNum) -> 
+                new Livro(rs.getLong("id"),rs.getString("titulo"),rs.getString("autor"),rs.getInt("ano"),rs.getLong("codigoUsuario")));
+
+        return livros.isEmpty() ? null : livros.get(0);
+}
+
 
     @Override
     public boolean cadastraLivroNovo(Livro livro) {
         this.jdbcTemplate.update(
-            "INSERT INTO livros(id,titulo,autor,ano) VALUES (?,?,?,?)",
-            livro.getId(),livro.getTitulo(),livro.getAutor(),livro.getAno());
+            "INSERT INTO livros(id, titulo, autor, ano, codigoUsuario) VALUES (?,?,?,?,?)",
+            livro.getId(), livro.getTitulo(), livro.getAutor(), livro.getAno(), livro.getCodigoUsuario());
         return true;
     }
 
